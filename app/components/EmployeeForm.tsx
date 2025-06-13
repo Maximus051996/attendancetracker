@@ -17,11 +17,18 @@ type Props = {
   isEdit: boolean;
 };
 
+type EmployeeMaster = {
+  _id: string;
+  name: string;
+};
+
 export default function EmployeeForm({ onSubmit, initialData, isEdit }: Props) {
   const [name, setName] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [error, setError] = useState("");
+  const [employees, setEmployees] = useState<EmployeeMaster[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -36,6 +43,18 @@ export default function EmployeeForm({ onSubmit, initialData, isEdit }: Props) {
       setError("");
     }
   }, [initialData]);
+
+  useEffect(() => {
+    const fetchEmployeeNames = async () => {
+      setLoading(true);
+      const res = await fetch("/api/employee-master");
+      const data = await res.json();
+      setEmployees(data);
+      setLoading(false);
+    };
+
+    fetchEmployeeNames();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,14 +88,23 @@ export default function EmployeeForm({ onSubmit, initialData, isEdit }: Props) {
       className="bg-white shadow p-4 rounded-xl mb-6 space-y-4"
     >
       <div>
-        <label className="block font-medium mb-1">Employee Name</label>
-        <input
+        <label className="block font-medium mb-1">Select Employee</label>
+        <select
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border p-2 rounded"
-          placeholder="e.g. John Doe"
+          className="w-full border p-2 rounded bg-white"
           required
-        />
+        >
+          <option value="">-- Choose an employee --</option>
+          {employees.map((emp) => (
+            <option key={emp._id} value={emp.name}>
+              {emp.name}
+            </option>
+          ))}
+        </select>
+        {loading && (
+          <p className="text-sm text-gray-500 mt-1 animate-pulse">Loading...</p>
+        )}
       </div>
 
       <div className="flex gap-4">
