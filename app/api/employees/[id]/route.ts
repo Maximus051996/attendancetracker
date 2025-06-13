@@ -6,10 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 // PUT /api/employees/[id] - Update employee
 export async function PUT(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { params } = context;
     const body = await req.json();
 
     // ❗️Exclude _id to prevent immutable field error
@@ -33,11 +32,9 @@ export async function PUT(
 // DELETE /api/employees/[id] - Delete employee
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { params } = context;
-
     const client = await clientPromise;
     const db = client.db("employee-tracker");
 
