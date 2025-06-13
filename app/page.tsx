@@ -14,7 +14,7 @@ type Employee = {
 
 export default function HomePage() {
   const router = useRouter(); // ✅ Router initialized
-
+  const [errorMessage, setErrorMessage] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,24 +39,38 @@ export default function HomePage() {
     end?: string;
   }) => {
     setLoading(true);
+    setErrorMessage(""); // Reset error
 
-    if (employee._id) {
-      await fetch(`/api/employees/${employee._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(employee),
-      });
-      setEditingId(null);
-    } else {
-      await fetch("/api/employees", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(employee),
-      });
+    try {
+      let res;
+      if (employee._id) {
+        res = await fetch(`/api/employees/${employee._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(employee),
+        });
+        setEditingId(null);
+      } else {
+        res = await fetch("/api/employees", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(employee),
+        });
+      }
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to save data");
+      }
+
+      await fetchEmployees();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      setErrorMessage(error.message || "An unexpected error occurred");
+    } finally {
+      setLoading(false);
     }
-
-    await fetchEmployees();
-    setLoading(false);
   };
 
   const handleDelete = async (_id: string) => {
@@ -137,6 +151,12 @@ export default function HomePage() {
             <span className="ml-3 text-blue-700 font-medium animate-pulse">
               Fetching data...
             </span>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mb-4 px-4 py-3 rounded bg-red-100 border border-red-300 text-red-700 text-sm shadow">
+            ⚠️ {errorMessage}
           </div>
         )}
 

@@ -5,11 +5,32 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    const { name } = body;
+
+    if (!name) {
+      return NextResponse.json(
+        { message: "Name is required" },
+        { status: 400 }
+      );
+    }
 
     const client = await clientPromise;
     const db = client.db("employee-tracker");
 
     const today = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
+
+    // Check for duplicate
+    const existing = await db.collection("employees").findOne({
+      name,
+      date: today,
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { message: "Employee already checked in today" },
+        { status: 409 } // Conflict
+      );
+    }
 
     await db.collection("employees").insertOne({
       ...body,
