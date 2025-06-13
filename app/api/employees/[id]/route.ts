@@ -6,9 +6,10 @@ import { NextRequest, NextResponse } from "next/server";
 // PUT /api/employees/[id] - Update employee
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
 
     // ❗️Exclude _id to prevent immutable field error
@@ -20,7 +21,7 @@ export async function PUT(
 
     await db
       .collection("employees")
-      .updateOne({ _id: new ObjectId(params.id) }, { $set: updateData });
+      .updateOne({ _id: new ObjectId(id) }, { $set: updateData });
 
     return NextResponse.json({ message: "Updated" });
   } catch (err) {
@@ -32,15 +33,15 @@ export async function PUT(
 // DELETE /api/employees/[id] - Delete employee
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+
     const client = await clientPromise;
     const db = client.db("employee-tracker");
 
-    await db
-      .collection("employees")
-      .deleteOne({ _id: new ObjectId(params.id) });
+    await db.collection("employees").deleteOne({ _id: new ObjectId(id) });
 
     return NextResponse.json({ message: "Deleted" });
   } catch (err) {
