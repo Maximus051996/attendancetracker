@@ -32,6 +32,16 @@ export default function HomePage() {
     fetchEmployees();
   }, []);
 
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage("");
+      }, 4000); // 5 seconds
+
+      return () => clearTimeout(timer); // Cleanup on unmount or errorMessage change
+    }
+  }, [errorMessage]);
+
   const handleAddOrUpdate = async (employee: {
     _id?: string;
     name: string;
